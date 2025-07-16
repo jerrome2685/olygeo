@@ -164,7 +164,7 @@ class ProCircle:
         a = Oz ** 2 * Qz ** 2
         d = -2 * Ox * Oz * Qz ** 2
         e = -2 * Oy * Oz * Qz ** 2
-        f = (Ox ** 2 + Oy ** 2) * Qz ** 2 - (Qx * Oz - Ox * Qz) ** 2 + (Qy * Oz - Oy * Qz) ** 2
+        f = (Ox ** 2 + Oy ** 2) * Qz ** 2 - (Qx * Oz - Ox * Qz) ** 2 - (Qy * Oz - Oy * Qz) ** 2
         return cls(a, d, e, f)
 
     def contains(self, P: ProPoint):
