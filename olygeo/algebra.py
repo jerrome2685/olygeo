@@ -101,7 +101,7 @@ def draw_valid_subs(base_syms, eq_branches, other_branches,
     return None
 
 
-def is_zero(expr: Expr, conditions, trials=10, low=-2.0, high=2.0) -> bool:
+def is_zero(expr: Expr, conditions, *, trials=10, low=-2.0, high=2.0, log=False) -> bool:
     if not isinstance(expr, Expr) or not expr.free_symbols:
         return abs(float(expr)) < tol
     cond_syms = set().union(*(c.free_symbols for c in conditions))
@@ -112,12 +112,13 @@ def is_zero(expr: Expr, conditions, trials=10, low=-2.0, high=2.0) -> bool:
         subs = draw_valid_subs(base_syms, eq_br, other_br, low, high)
         if subs is None: return False
         val = f_mp(*[subs[s] for s in base_syms])
-        print(f' trial {i+1}: expr ≈ {mp.nstr(val, 10)}')
+        if log:
+            print(f' trial {i+1}: expr ≈ {mp.nstr(val, 10)}')
         if abs(val) > tol: return False
     return True
 
 
-def is_nonnegative(expr: Expr, conditions, trials=10, low=-2.0, high=2.0) -> bool:
+def is_nonnegative(expr: Expr, conditions, *, trials=10, low=-2.0, high=2.0, log=False) -> bool:
     if not isinstance(expr, Expr) or not expr.free_symbols:
         return float(expr) >= -tol
     cond_syms = set().union(*(c.free_symbols for c in conditions))
@@ -128,12 +129,13 @@ def is_nonnegative(expr: Expr, conditions, trials=10, low=-2.0, high=2.0) -> boo
         subs = draw_valid_subs(base_syms, eq_br, other_br, low, high)
         if subs is None: return False
         val = f_mp(*[subs[s] for s in base_syms])
-        print(f' trial {i+1}: val ≈ {mp.nstr(val, 10)}')
+        if log:
+            print(f' trial {i+1}: val ≈ {mp.nstr(val, 10)}')
         if val < -tol: return False
     return True
 
 
-def probabilistic_rank(M: Matrix, conditions, trials=10, low=-2.0, high=2.0) -> int:
+def probabilistic_rank(M: Matrix, conditions, *, trials=10, low=-2.0, high=2.0) -> int:
     cond_syms = set().union(*(c.free_symbols for c in conditions))
     base_syms = list(set(M.free_symbols) | cond_syms)
     entry_funcs = [lambdify_mpmath(M[i,j], base_syms) for i in range(M.rows) for j in range(M.cols)]
@@ -142,7 +144,10 @@ def probabilistic_rank(M: Matrix, conditions, trials=10, low=-2.0, high=2.0) -> 
     for _ in range(trials):
         subs = draw_valid_subs(base_syms, eq_br, other_br, low, high, 100)
         if subs is None: continue
-        A = np.zeros((M.rows, M.cols), dtype=float)
-        for idx,f in enumerate(entry_funcs): i,j = divmod(idx, M.cols); A[i,j] = float(f(*[subs[s] for s in base_syms]))
-        max_rank = max(max_rank, np.linalg.matrix_rank(A))
+        A_mp = sp.Matrix([[entry_funcs[i * M.cols + j](*[subs[s] for s in base_syms])
+                           for j in range(M.cols)]
+                          for i in range(M.rows)])
+        _, U, _ = mp.lu(A_mp)
+        r = sum(1 for i in range(min(M.rows, M.cols)) if abs(U[i, i]) > tol)
+        max_rank = max(max_rank, r)
     return max_rank

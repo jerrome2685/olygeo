@@ -1,0 +1,33 @@
+Metadata-Version: 2.4
+Name: olygeo
+Version: 0.1.0
+Summary: A geometry library for olympiad-style constructions and proofs
+Home-page: https://github.com/jerrome2685/olygeo
+Author: Hyeongjoe Chu
+Author-email: you@example.com
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: sympy>=1.8
+Requires-Dist: numpy>=1.20
+Requires-Dist: mpmath>=1.2
+Requires-Dist: multimethod>=1.7
+Dynamic: author
+Dynamic: author-email
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# Olygeo
+
+A Python package for 2D projective geometry, tailored for proof-based Olympiad-style problem solving.

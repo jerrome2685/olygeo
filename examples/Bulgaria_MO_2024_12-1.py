@@ -28,7 +28,7 @@ CA = Geo.distance(C, A)
 CB = Geo.distance(C, B)
 diff = CA - CB
 
-print("Under ∠I1MI2 = 90°, is CA = CB? →", Geo.is_zero(diff))
+print("Under ∠I1MI2 = 90°, is CA = CB? →", Geo.is_zero(diff, log=True))
 
 print(Geo.is_zero(Geo.distance(C, A) - Geo.distance(A, B)))
 t1 = time.perf_counter()
