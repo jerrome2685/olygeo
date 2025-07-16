@@ -15,7 +15,6 @@ setup(
     packages=find_packages(),
     install_requires=[
         "sympy>=1.8",
-        "numpy>=1.20",
         "mpmath>=1.2",
         "multimethod>=1.7"
     ],

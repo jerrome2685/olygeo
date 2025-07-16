@@ -8,7 +8,7 @@ from sympy.core.relational import Equality, Relational
 from functools import lru_cache
 
 mp.mp.dps = 1000
-mp.mp.epsilon = mp.mpf('1e-30')
+mp.mp.epsilon = mp.mpf('1e-100')
 
 tol = mp.mpf('1e-100')
 
