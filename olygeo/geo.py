@@ -1,0 +1,113 @@
+from .algebra import is_zero, probabilistic_rank, is_nonnegative
+from sympy.core.relational import Relational
+from sympy import Matrix
+import sympy as sp
+from functools import singledispatch
+from multimethod import multimethod
+
+
+class Geo:
+
+    conditions = []
+
+    @staticmethod
+    def add_condition(cond: Relational):
+        Geo.conditions.append(cond)
+
+    @staticmethod
+    def clear_conditions():
+        Geo.conditions.clear()
+
+    @staticmethod
+    def is_zero(expr, **kwargs):
+        return is_zero(expr, Geo.conditions, **kwargs)
+
+    @staticmethod
+    def is_nonnegative(expr, **kwargs):
+        return is_nonnegative(expr, Geo.conditions, **kwargs)
+
+    @staticmethod
+    def probabilistic_rank(M, **kwargs):
+        return probabilistic_rank(M, Geo.conditions, **kwargs)
+
+    @staticmethod
+    def is_collinear(pts: list) -> bool:
+        if len(pts) < 3:
+            return True
+        M = Matrix([[p.x, p.y, p.z] for p in pts])
+        return Geo.probabilistic_rank(M) <= 2
+
+    @staticmethod
+    def is_concyclic(pts: list) -> bool:
+        if len(pts) < 4:
+            return True
+        M = Matrix([[p.x**2 + p.y**2, p.x*p.z, p.y*p.z, p.z**2] for p in pts])
+        return Geo.probabilistic_rank(M) <= 3
+
+    @staticmethod
+    @multimethod
+    def intersection(a, b):
+        raise TypeError(f"Don't know how to intersect {type(a)} & {type(b)}")
+
+    @staticmethod
+    @multimethod
+    def distance(a, b):
+        raise TypeError(f"Don't know distance between {type(a)} & {type(b)}")
+
+    @staticmethod
+    @multimethod
+    def angle(obj1, obj2, obj3=None):
+        raise TypeError(f"Cannot compute angle for types: {type(obj1)}")
+
+    @staticmethod
+    @multimethod
+    def is_eq(a, b) -> bool:
+        return Geo.is_zero(a - b)
+
+
+
+    @staticmethod
+    def is_ne(a, b) -> bool:
+        return not Geo.is_eq(a, b)
+
+    @staticmethod
+    def is_lt(expr1, expr2) -> bool:
+        return not Geo.is_nonnegative(expr1 - expr2)
+
+    @staticmethod
+    def is_le(expr1, expr2) -> bool:
+        return Geo.is_nonnegative(expr2 - expr1)
+
+    @staticmethod
+    def is_ge(expr1, expr2) -> bool:
+        return Geo.is_nonnegative(expr1 - expr2)
+
+    @staticmethod
+    def is_gt(expr1, expr2) -> bool:
+        return not Geo.is_nonnegative(expr2 - expr1)
+
+
+@singledispatch
+def Eq(a, b):
+    return sp.Eq(a, b)
+
+def Ne(a, b):
+    return sp.Not(Eq(a, b))
+
+
+def Lt(a, b):
+    return sp.Lt(a, b)
+
+
+def Le(a, b):
+    return sp.Le(a, b)
+
+
+def Gt(a, b):
+    return sp.Gt(a, b)
+
+
+def Ge(a, b):
+    return sp.Ge(a, b)
+
+
