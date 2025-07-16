@@ -1,5 +1,4 @@
 import random
-import numpy as np
 import sympy as sp
 import mpmath as mp
 from sympy.core.expr import Expr
@@ -9,7 +8,7 @@ from sympy.core.relational import Equality, Relational
 from functools import lru_cache
 
 mp.mp.dps = 1000
-mp.mp.epsilon = mp.mpf('1e-100')
+mp.mp.epsilon = mp.mpf('1e-30')
 
 tol = mp.mpf('1e-100')
 
@@ -134,6 +133,22 @@ def is_nonnegative(expr: Expr, conditions, *, trials=10, low=-2.0, high=2.0, log
         if val < -tol: return False
     return True
 
+def is_positive(expr: Expr, conditions, *, trials=10, low=-2.0, high=2.0, log=False) -> bool:
+    if not isinstance(expr, Expr) or not expr.free_symbols:
+        return float(expr) > tol
+    cond_syms = set().union(*(c.free_symbols for c in conditions))
+    base_syms = list(set(expr.free_symbols) | cond_syms)
+    f_mp = lambdify_mpmath(expr, base_syms)
+    eq_br, other_br = split_conditions(conditions)
+    for i in range(trials):
+        subs = draw_valid_subs(base_syms, eq_br, other_br, low, high)
+        if subs is None: return False
+        val = f_mp(*[subs[s] for s in base_syms])
+        if log:
+            print(f' trial {i+1}: val ≈ {mp.nstr(val, 10)}')
+        if val <= tol: return False
+    return True
+
 
 def probabilistic_rank(M: Matrix, conditions, *, trials=10, low=-2.0, high=2.0) -> int:
     cond_syms = set().union(*(c.free_symbols for c in conditions))
@@ -147,7 +162,6 @@ def probabilistic_rank(M: Matrix, conditions, *, trials=10, low=-2.0, high=2.0) 
         A_mp = sp.Matrix([[entry_funcs[i * M.cols + j](*[subs[s] for s in base_syms])
                            for j in range(M.cols)]
                           for i in range(M.rows)])
-        _, U, _ = mp.lu(A_mp)
-        r = sum(1 for i in range(min(M.rows, M.cols)) if abs(U[i, i]) > tol)
+        r = sum(1 for v in mp.svd_r(A_mp, compute_uv=False) if not abs(v) <= tol)
         max_rank = max(max_rank, r)
     return max_rank

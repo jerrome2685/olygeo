@@ -1,4 +1,4 @@
-from .algebra import is_zero, probabilistic_rank, is_nonnegative
+from .algebra import is_zero, probabilistic_rank, is_nonnegative, is_positive
 from sympy.core.relational import Relational
 from sympy import Matrix
 import sympy as sp
@@ -25,6 +25,10 @@ class Geo:
     @staticmethod
     def is_nonnegative(expr, **kwargs):
         return is_nonnegative(expr, Geo.conditions, **kwargs)
+
+    @staticmethod
+    def is_positive(expr, **kwargs):
+        return is_positive(expr, Geo.conditions, **kwargs)
 
     @staticmethod
     def probabilistic_rank(M, **kwargs):
@@ -61,30 +65,30 @@ class Geo:
 
     @staticmethod
     @multimethod
-    def is_eq(a, b) -> bool:
-        return Geo.is_zero(a - b)
+    def is_eq(a, b, log=False) -> bool:
+        return Geo.is_zero(a - b, log=log)
 
 
 
     @staticmethod
-    def is_ne(a, b) -> bool:
-        return not Geo.is_eq(a, b)
+    def is_ne(a, b, log=False) -> bool:
+        return not Geo.is_eq(a, b, log)
 
     @staticmethod
-    def is_lt(expr1, expr2) -> bool:
-        return not Geo.is_nonnegative(expr1 - expr2)
+    def is_lt(expr1, expr2, log=False) -> bool:
+        return Geo.is_positive(expr2 - expr1, log=log)
 
     @staticmethod
-    def is_le(expr1, expr2) -> bool:
-        return Geo.is_nonnegative(expr2 - expr1)
+    def is_le(expr1, expr2, log=False) -> bool:
+        return Geo.is_nonnegative(expr2 - expr1, log=log)
 
     @staticmethod
-    def is_ge(expr1, expr2) -> bool:
-        return Geo.is_nonnegative(expr1 - expr2)
+    def is_ge(expr1, expr2, log=False) -> bool:
+        return Geo.is_nonnegative(expr1 - expr2, log=log)
 
     @staticmethod
-    def is_gt(expr1, expr2) -> bool:
-        return not Geo.is_nonnegative(expr2 - expr1)
+    def is_gt(expr1, expr2, log=False) -> bool:
+        return Geo.is_positive(expr1 - expr2, log=log)
 
 
 @singledispatch

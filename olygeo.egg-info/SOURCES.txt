@@ -16,5 +16,6 @@ olygeo/geometry/triangle.py
 tests/test_algebra.py
 tests/test_incenter.py
 tests/test_intersect.py
+tests/test_iszero.py
 tests/test_mid.py
 tests/test_unfixed.py

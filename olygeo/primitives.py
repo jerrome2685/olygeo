@@ -75,12 +75,11 @@ class ProPoint:
     def perpendicular_foot(self, L: "ProLine"):
         return L.intersection(self.perpendicular_through(L))
 
-    def is_eq(self, other) -> bool:
-        return Geo.is_zero(self.x * other.z - other.x * self.z) \
-            and Geo.is_zero(self.y * other.z - other.y * self.z)
+    def is_eq(self, other, log=False) -> bool:
+        return Geo.is_zero((self.x * other.z - other.x * self.z)**2 + (self.y * other.z - other.y * self.z)**2, log=log)
 
-    def is_ne(self, other) -> bool:
-        return not self.is_eq(other)
+    def is_ne(self, other, log=False) -> bool:
+        return not self.is_eq(other, log)
 
 
 class ProLine:
@@ -124,9 +123,8 @@ class ProLine:
     def __repr__(self):
         return f"ProLine({self.a}*x+{self.b}*y+{self.c}*z=0)"
 
-    def is_eq(self, other) -> bool:
-        return Geo.is_zero(self.a * other.b - other.a * self.b) \
-            and Geo.is_zero(self.a * other.c - other.a * self.c)
+    def is_eq(self, other, log=False) -> bool:
+        return Geo.is_zero((self.a * other.b - other.a * self.b)**2 + (self.a * other.c - other.a * self.c)**2, log=log)
 
     def is_ne(self, other) -> bool:
         return not self.is_eq(other)
@@ -235,11 +233,10 @@ class ProCircle:
     def __repr__(self):
         return f"ProCircle({self.a}*(x^2+y^2)+{self.d}*x*z+{self.e}*y*z+{self.f}*z^2=0)"
 
-    def is_eq(self, other: "ProCircle") -> bool:
+    def is_eq(self, other: "ProCircle", log=False) -> bool:
         return (
-            Geo.is_zero(self.d * other.a - other.d * self.a) and
-            Geo.is_zero(self.e * other.a - other.e * self.a) and
-            Geo.is_zero(self.f * other.a - other.f * self.a)
+            Geo.is_zero((self.d * other.a - other.d * self.a)**2 + (self.e * other.a - other.e * self.a)**2
+                        + (self.f * other.a - other.f * self.a)**2, log=log)
         )
 
     def is_ne(self, other: "ProCircle") -> bool:
@@ -280,16 +277,16 @@ def _(C1: ProCircle, C2: ProCircle):
     return C1.intersection(C2)
 
 @Geo.is_eq.register
-def _(A: ProPoint, B: ProPoint) -> bool:
-    return A.is_eq(B)
+def _(A: ProPoint, B: ProPoint, log=False) -> bool:
+    return A.is_eq(B, log)
 
 @Geo.is_eq.register
-def _(L1: ProLine, L2: ProLine) -> bool:
-    return L1.is_eq(L2)
+def _(L1: ProLine, L2: ProLine, log=False) -> bool:
+    return L1.is_eq(L2, log)
 
 @Geo.is_eq.register
-def _(C1: ProCircle, C2: ProCircle) -> bool:
-    return C1.is_eq(C2)
+def _(C1: ProCircle, C2: ProCircle, log=False) -> bool:
+    return C1.is_eq(C2, log)
 
 @Geo.distance.register
 def _(P1: ProPoint, P2: ProPoint):
@@ -347,7 +344,6 @@ def _(A: ProPoint, B: ProPoint):
 @Eq.register
 def _(a: ProLine, b:ProLine):
     return sp.And(
-        sp.Eq(a.a * b.b - b.a * a.b, 0),
         sp.Eq(a.a * b.c - b.a * a.c, 0),
         sp.Eq(a.b * b.c - b.b * a.c, 0),
     )
