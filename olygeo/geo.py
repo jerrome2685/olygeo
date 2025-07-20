@@ -63,7 +63,7 @@ class Geo:
 
     @staticmethod
     @multimethod
-    def is_contained(a, b):
+    def is_contained(a, b, log=False):
         raise TypeError(f"Cannot interpret {type(a)} contained to {type(b)}")
 
 

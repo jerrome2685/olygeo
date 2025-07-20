@@ -101,9 +101,9 @@ class ProLine:
         cls._unfixed_counter += 1
         return cls(Symbol(f"{name}_a"), Symbol(f"{name}_b"))
 
-    def contains(self, P: ProPoint):
+    def contains(self, P: ProPoint, log=False):
         expr = self.a*P.x + self.b*P.y + self.c*P.z
-        return Geo.is_zero(expr)
+        return Geo.is_zero(expr, log=log)
 
     @multimethod
     def intersection(self, other):
@@ -165,12 +165,12 @@ class ProCircle:
         f = (Ox ** 2 + Oy ** 2) * Qz ** 2 - (Qx * Oz - Ox * Qz) ** 2 - (Qy * Oz - Oy * Qz) ** 2
         return cls(a, d, e, f)
 
-    def contains(self, P: ProPoint):
+    def contains(self, P: ProPoint, log=False):
         expr = (self.a*(P.x**2 + P.y**2)
                 + self.d*(P.x*P.z)
                 + self.e*(P.y*P.z)
                 + self.f*(P.z**2))
-        return Geo.is_zero(expr)
+        return Geo.is_zero(expr, log=log)
 
     def power(self, P: ProPoint):
         return self.contains(P)
@@ -335,12 +335,12 @@ def _(A: ProPoint, B: ProPoint, C: ProPoint):
     return sp.acos(dot / (n1 * n2))
 
 @Geo.is_contained.register
-def _(p: ProPoint, l: ProLine):
-    return l.contains(p)
+def _(p: ProPoint, l: ProLine, log=False):
+    return l.contains(p, log)
 
 @Geo.is_contained.register
-def _(p: ProPoint, c: ProCircle):
-    return c.contains(p)
+def _(p: ProPoint, c: ProCircle, log=False):
+    return c.contains(p, log)
 
 
 @Contained.register
