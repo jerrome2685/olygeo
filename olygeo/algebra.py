@@ -87,6 +87,8 @@ def draw_valid_subs(base_syms, eq_branches, other_branches,
                     for v,val in zip(solve_vars, vals): a[v] = val
                     return [eq_funcs[i](*[a[s] for s in all_eq_syms]) for i in range(len(funcs_syms))]
                 guesses = [subs[v] for v in solve_vars]
+                try: mp.findroot(sysfun, guesses, tol=1e-6, maxsteps=5)
+                except Exception: continue
                 try: sol = mp.findroot(sysfun, guesses)
                 except Exception: continue
                 sol = sol if hasattr(sol, '__iter__') else [sol]

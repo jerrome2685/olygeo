@@ -15,3 +15,4 @@ def test_midpoint():
     M2 = (B + C) / 2
 
     assert M.is_eq(M2)
+    Geo.clear_conditions()

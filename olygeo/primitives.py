@@ -1,6 +1,6 @@
 from sympy import Symbol
 import sympy as sp
-from .geo import Geo, Eq, Ge
+from .geo import Geo, Eq, Ge, Contained
 from .choice import ChoiceList
 from multimethod import multimethod
 
@@ -10,8 +10,8 @@ class ProPoint:
     _unfixed_counter = 0
 
 
-    def __init__(self, x, y, z=sp.sympify(1)):
-        self.x, self.y, self.z = x, y, z
+    def __init__(self, x, y, z=1):
+        self.x, self.y, self.z = sp.sympify(x), sp.sympify(y), sp.sympify(z)
 
 
     def __repr__(self):
@@ -85,8 +85,8 @@ class ProPoint:
 class ProLine:
     _unfixed_counter = 0
 
-    def __init__(self, a, b, c=sp.sympify(1)):
-        self.a, self.b, self.c = a, b, c
+    def __init__(self, a, b, c=1):
+        self.a, self.b, self.c = sp.sympify(a), sp.sympify(b), sp.sympify(c)
 
     @classmethod
     def through(cls, P: ProPoint, Q: ProPoint):
@@ -134,8 +134,8 @@ class ProLine:
 class ProCircle:
     _unfixed_counter = 0
 
-    def __init__(self, a, d, e, f=sp.sympify(1)):
-        self.a, self.d, self.e, self.f = a, d, e, f
+    def __init__(self, a, d, e, f=1):
+        self.a, self.d, self.e, self.f = sp.sympify(a), sp.sympify(d), sp.sympify(e), sp.sympify(f)
 
     @classmethod
     def unfixed(cls):
@@ -333,6 +333,23 @@ def _(A: ProPoint, B: ProPoint, C: ProPoint):
     n1 = sp.sqrt(v1.dot(v1))
     n2 = sp.sqrt(v2.dot(v2))
     return sp.acos(dot / (n1 * n2))
+
+@Geo.is_contained.register
+def _(p: ProPoint, l: ProLine):
+    return l.contains(p)
+
+@Geo.is_contained.register
+def _(p: ProPoint, c: ProCircle):
+    return c.contains(p)
+
+
+@Contained.register
+def _(p: ProPoint, l: ProLine):
+    return sp.Eq(l.a * p.x + l.b * p.y + l.c * p.z, 0)
+
+@Contained.register
+def _(p: ProPoint, c: ProCircle):
+    return sp.Eq(c.a * (p.x ** 2 + p.y ** 2) + c.d * (p.x * p.z) + c.e * (p.y * p.z) + c.f * (p.z ** 2),0)
 
 @Eq.register
 def _(A: ProPoint, B: ProPoint):

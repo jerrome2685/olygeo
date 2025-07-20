@@ -49,6 +49,19 @@ class Geo:
         return Geo.probabilistic_rank(M) <= 3
 
     @staticmethod
+    def is_concurrent(lines: list) -> bool:
+        if len(lines) < 3:
+            return True
+        M = Matrix([[l.a, l.b, l.c] for l in lines])
+        return Geo.probabilistic_rank(M) <= 2
+
+    @staticmethod
+    @multimethod
+    def is_contained(a, b):
+        raise TypeError(f"Cannot interpret {type(a)} contained to {type(b)}")
+
+
+    @staticmethod
     @multimethod
     def intersection(a, b):
         raise TypeError(f"Don't know how to intersect {type(a)} & {type(b)}")
@@ -114,4 +127,6 @@ def Gt(a, b):
 def Ge(a, b):
     return sp.Ge(a, b)
 
-
+@multimethod
+def Contained(a, b):
+    return Eq(a, b)
