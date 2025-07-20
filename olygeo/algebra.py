@@ -45,6 +45,7 @@ def split_conditions(conditions):
 
 def evaluate_condition(cond, subs):
     if isinstance(cond, BooleanFunction):
+        print("1")
         if cond.func is sp.And:
             return all(evaluate_condition(a, subs) for a in cond.args)
         if cond.func is sp.Or:
@@ -71,7 +72,7 @@ def evaluate_condition(cond, subs):
 
 
 def draw_valid_subs(base_syms, eq_branches, other_branches,
-                    low=-2.0, high=2.0, max_depth=5000):
+                    low=-2.0, high=2.0, max_depth=50000):
     for eqs, ineqs in zip(eq_branches, other_branches):
         funcs_syms = [(eq.lhs - eq.rhs) for eq in eqs]
         all_eq_syms = list({s for f in funcs_syms for s in f.free_symbols})
@@ -159,8 +160,8 @@ def probabilistic_rank(M: Matrix, conditions, *, trials=10, low=-2.0, high=2.0) 
     eq_br, other_br = split_conditions(conditions)
     max_rank = 0
     for _ in range(trials):
-        subs = draw_valid_subs(base_syms, eq_br, other_br, low, high, 100)
-        if subs is None: continue
+        subs = draw_valid_subs(base_syms, eq_br, other_br, low, high)
+        if subs is None: return -1
         A_mp = sp.Matrix([[entry_funcs[i * M.cols + j](*[subs[s] for s in base_syms])
                            for j in range(M.cols)]
                           for i in range(M.rows)])

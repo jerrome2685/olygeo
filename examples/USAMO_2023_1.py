@@ -20,7 +20,7 @@ q = pts.choose(not_B)
 
 n = (a + q) / 2
 # n = (a + pts[0] + pts[1] - b) / 2
-print(Geo.is_zero(Geo.distance(n, b).expr - Geo.distance(n, c).expr))
+print(Geo.is_zero(Geo.distance(n, b) - Geo.distance(n, c)))
 
 
 

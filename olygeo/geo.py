@@ -39,21 +39,27 @@ class Geo:
         if len(pts) < 3:
             return True
         M = Matrix([[p.x, p.y, p.z] for p in pts])
-        return Geo.probabilistic_rank(M) <= 2
+        r = Geo.probabilistic_rank(M)
+        if r == -1: return False
+        return r <= 2
 
     @staticmethod
     def is_concyclic(pts: list) -> bool:
         if len(pts) < 4:
             return True
         M = Matrix([[p.x**2 + p.y**2, p.x*p.z, p.y*p.z, p.z**2] for p in pts])
-        return Geo.probabilistic_rank(M) <= 3
+        r = Geo.probabilistic_rank(M)
+        if r == -1: return False
+        return r <= 3
 
     @staticmethod
     def is_concurrent(lines: list) -> bool:
         if len(lines) < 3:
             return True
         M = Matrix([[l.a, l.b, l.c] for l in lines])
-        return Geo.probabilistic_rank(M) <= 2
+        r = Geo.probabilistic_rank(M)
+        if r == -1: return False
+        return r <= 2
 
     @staticmethod
     @multimethod

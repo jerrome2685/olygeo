@@ -1,9 +1,9 @@
 from olygeo import *
 import sympy as sp
 
-A = ProPoint.unfixed('A')
-B = ProPoint.unfixed('B')
-C = ProPoint.unfixed('C')
+A = ProPoint.unfixed()
+B = ProPoint.unfixed()
+C = ProPoint.unfixed()
 
 t, u, v = sp.symbols('t u v', real=True)
 
@@ -29,5 +29,4 @@ AD = ProLine.through(A, D)
 BE = ProLine.through(B, E)
 CF = ProLine.through(C, F)
 
-P = Geo.intersection(AD, BE)
-assert CF.contains(P), "Lines AD, BE, CF should be concurrent by Ceva's theorem"
+print(Geo.is_concurrent([AD, BE, CF]))
