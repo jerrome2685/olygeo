@@ -161,7 +161,6 @@ Project Link: [https://github.com/jerrome2685/olygeo](https://github.com/jerrome
 ## Acknowledgments
 
 * [Sympy](https://www.sympy.org/)
-* [NumPy](https://numpy.org/)
 * [mpmath](https://mpmath.org/)
 * [multimethod](https://github.com/mrocklin/multimethod)
 * [Matplotlib](https://matplotlib.org/)
