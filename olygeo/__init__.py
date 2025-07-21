@@ -1,4 +1,4 @@
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 
 from .geo import Geo, Eq, Ne, Lt, Le, Gt, Ge
 from .primitives import ProPoint, ProLine, ProCircle
