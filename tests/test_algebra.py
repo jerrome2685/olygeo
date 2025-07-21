@@ -49,20 +49,21 @@ def test_evaluate_condition_relational():
 
 def test_draw_valid_subs_simple_eq():
     eqb, othb = split_conditions([sp.Eq(x,0)])
-    subs = draw_valid_subs([x], eqb, othb, low=-1, high=1)
+    subs = draw_valid_subs([x], eqb[0], othb[0], low=-1, high=1)
     assert subs is not None
     assert abs(subs[x]) < 1e-3
 
 def test_draw_valid_subs_disjunction():
     cond = sp.Or(sp.Eq(x,1), sp.Eq(x,-1))
     eqb, othb = split_conditions([cond])
-    subs = draw_valid_subs([x], eqb, othb, low=-2, high=2)
-    assert subs is not None
-    val = subs[x]
-    assert abs(abs(val) - 1) < 1e-3
+    for i in range(2):
+        subs = draw_valid_subs([x], eqb[i], othb[i], low=-2, high=2)
+        assert subs is not None
+        val = subs[x]
+        assert abs(abs(val) - 1) < 1e-3
 
 def test_draw_valid_subs_unsolvable():
     cond = sp.Eq(x**2 + 1, 0)
     eqb, othb = split_conditions([cond])
-    subs = draw_valid_subs([x], eqb, othb, low=-2, high=2, max_depth=100)
+    subs = draw_valid_subs([x], eqb[0], othb[0], low=-2, high=2, max_depth=100)
     assert subs is None
