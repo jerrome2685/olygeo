@@ -6,6 +6,7 @@ from sympy import Matrix
 from sympy.logic.boolalg import to_dnf, And, BooleanFunction, BooleanAtom
 from sympy.core.relational import Equality, Relational
 from functools import lru_cache
+from typing import Union
 
 mp.mp.dps = 1000
 mp.mp.epsilon = mp.mpf('1e-100')
@@ -176,7 +177,8 @@ def is_positive(expr: Expr, conditions, *, trials=10, low=-2.0, high=2.0, log=Fa
 
     return True
 
-def is_true(rel: Expr, conditions, *, trials=10, low=-2.0, high=2.0, log=False) -> bool:
+def is_true(rel: Union[bool, BooleanAtom, Relational, BooleanFunction],
+            conditions, *, trials=10, low=-2.0, high=2.0, log=False) -> bool:
     if isinstance(rel, (bool, BooleanAtom)):
         return bool(rel)
     cond_syms = set().union(*(c.free_symbols for c in conditions))
