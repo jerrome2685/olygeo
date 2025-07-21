@@ -45,7 +45,6 @@ def split_conditions(conditions):
 
 def evaluate_condition(cond, subs):
     if isinstance(cond, BooleanFunction):
-        print("1")
         if cond.func is sp.And:
             return all(evaluate_condition(a, subs) for a in cond.args)
         if cond.func is sp.Or:
