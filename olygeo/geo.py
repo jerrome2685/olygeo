@@ -1,4 +1,4 @@
-from .algebra import is_zero, probabilistic_rank, is_nonnegative, is_positive
+from .algebra import is_zero, probabilistic_rank, is_non_negative, is_positive
 from sympy.core.relational import Relational
 from sympy import Matrix
 import sympy as sp
@@ -24,7 +24,7 @@ class Geo:
 
     @staticmethod
     def is_nonnegative(expr, **kwargs):
-        return is_nonnegative(expr, Geo.conditions, **kwargs)
+        return is_non_negative(expr, Geo.conditions, **kwargs)
 
     @staticmethod
     def is_positive(expr, **kwargs):
@@ -40,7 +40,6 @@ class Geo:
             return True
         M = Matrix([[p.x, p.y, p.z] for p in pts])
         r = Geo.probabilistic_rank(M)
-        if r == -1: return False
         return r <= 2
 
     @staticmethod
@@ -49,7 +48,6 @@ class Geo:
             return True
         M = Matrix([[p.x**2 + p.y**2, p.x*p.z, p.y*p.z, p.z**2] for p in pts])
         r = Geo.probabilistic_rank(M)
-        if r == -1: return False
         return r <= 3
 
     @staticmethod
@@ -58,7 +56,6 @@ class Geo:
             return True
         M = Matrix([[l.a, l.b, l.c] for l in lines])
         r = Geo.probabilistic_rank(M)
-        if r == -1: return False
         return r <= 2
 
     @staticmethod
