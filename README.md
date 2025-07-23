@@ -117,16 +117,13 @@ print(I)
 * **2. Conditional definitions**
   Constructors that solve for coordinates, e.g., “Point X on segment AB” or mixtilinear incircle touchpoints.
 
-* **3. Concurrency & Collinearity**
-  Generic predicates: `Geo.is_concurrent([ℓ1,ℓ2,ℓ3])`, `Geo.is_collinear([P,Q,R])`.
-
-* **4. ProPolygon class**
+* **3. ProPolygon class**
   Polygon type with `.contains()`, `.intersect()`, built from vertices or bounding lines.
 
-* **5. Drawer / Visualizer**
+* **4. Drawer / Visualizer**
   Numeric plotting layer using Matplotlib or SVG, honoring geometric constraints.
 
-* **6. Prover**
+* **5. Prover**
   Algebraic prover using grid-based zero-testing to prove statements exactly.
 
 See [open issues](https://github.com/jerrome2685/olygeo/issues) for more.

@@ -1,4 +1,4 @@
-from .algebra import is_zero, probabilistic_rank, is_non_negative, is_positive
+from .algebra import is_zero, probabilistic_rank, is_non_negative, is_positive, is_nonzero
 from sympy.core.relational import Relational
 from sympy import Matrix
 import sympy as sp
@@ -23,7 +23,11 @@ class Geo:
         return is_zero(expr, Geo.conditions, **kwargs)
 
     @staticmethod
-    def is_nonnegative(expr, **kwargs):
+    def is_nonzero(expr, **kwargs):
+        return is_nonzero(expr, Geo.conditions, **kwargs)
+
+    @staticmethod
+    def is_non_negative(expr, **kwargs):
         return is_non_negative(expr, Geo.conditions, **kwargs)
 
     @staticmethod
@@ -88,7 +92,7 @@ class Geo:
 
     @staticmethod
     def is_ne(a, b, log=False) -> bool:
-        return not Geo.is_eq(a, b, log)
+        return Geo.is_nonzero(a - b, log=log)
 
     @staticmethod
     def is_lt(expr1, expr2, log=False) -> bool:
@@ -96,11 +100,11 @@ class Geo:
 
     @staticmethod
     def is_le(expr1, expr2, log=False) -> bool:
-        return Geo.is_nonnegative(expr2 - expr1, log=log)
+        return Geo.is_non_negative(expr2 - expr1, log=log)
 
     @staticmethod
     def is_ge(expr1, expr2, log=False) -> bool:
-        return Geo.is_nonnegative(expr1 - expr2, log=log)
+        return Geo.is_non_negative(expr1 - expr2, log=log)
 
     @staticmethod
     def is_gt(expr1, expr2, log=False) -> bool:

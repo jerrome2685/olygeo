@@ -79,7 +79,8 @@ class ProPoint:
         return Geo.is_zero((self.x * other.z - other.x * self.z)**2 + (self.y * other.z - other.y * self.z)**2, log=log)
 
     def is_ne(self, other, log=False) -> bool:
-        return not self.is_eq(other, log)
+        return Geo.is_nonzero((self.x * other.z - other.x * self.z)**2 +
+                              (self.y * other.z - other.y * self.z)**2, log=log)
 
 
 class ProLine:
@@ -126,8 +127,54 @@ class ProLine:
     def is_eq(self, other, log=False) -> bool:
         return Geo.is_zero((self.a * other.b - other.a * self.b)**2 + (self.a * other.c - other.a * self.c)**2, log=log)
 
-    def is_ne(self, other) -> bool:
-        return not self.is_eq(other)
+    def is_ne(self, other, log=False) -> bool:
+        return Geo.is_nonzero((self.a * other.b - other.a * self.b) ** 2 +
+                              (self.a * other.c - other.a * self.c) ** 2, log=log)
+
+
+class ProSegment(ProLine):
+    def __init__(self, A: ProPoint, B: ProPoint):
+        L = ProLine.through(A, B)
+        super().__init__(L.a, L.b, L.c)
+        self.A = A
+        self.B = B
+
+    def contains(self, P: ProPoint, log=False):
+        u_x = P.x * self.A.z - self.A.x * P.z
+        u_y = P.y * self.A.z - self.A.y * P.z
+        v_x = P.x * self.B.z - self.B.x * P.z
+        v_y = P.y * self.B.z - self.B.y * P.z
+        dot_h = u_x * v_x + u_y * v_y
+        return super().contains(P, log=log) and Geo.is_non_negative(-dot_h, log=log)
+
+    def length(self):
+        return Geo.distance(self.A, self.B)
+
+    def __eq__(self, other):
+        return (self.A == other.A and self.B == other.B) or (self.A == other.B and self.B == other.A)
+
+    def __hash__(self):
+        coords = [
+            (self.A.x, self.A.y, self.A.z),
+            (self.B.x, self.B.y, self.B.z),
+        ]
+        coords_sorted = tuple(sorted(coords))
+        return hash(coords_sorted)
+
+    def __repr__(self):
+        return f"ProSegment({str(self.A)}, {str(self.B)})"
+
+    @classmethod
+    def unfixed(cls):
+        return cls(ProPoint.unfixed(), ProPoint.unfixed())
+
+    def is_eq(self, other, log=False):
+        return ((self.A.is_eq(other.A, log=log) and self.B.is_eq(other.B, log=log)) or
+                (self.A.is_eq(other.B, log=log) and self.B.is_eq(other.A, log=log)))
+
+    def is_ne(self, other, log=False):
+        return ((self.A.is_ne(other.A, log=log) or self.B.is_ne(other.B, log=log)) and
+                (self.A.is_ne(other.B, log=log) or self.B.is_ne(other.A, log=log)))
 
 
 
@@ -239,8 +286,11 @@ class ProCircle:
                         + (self.f * other.a - other.f * self.a)**2, log=log)
         )
 
-    def is_ne(self, other: "ProCircle") -> bool:
-        return not self.is_eq(other)
+    def is_ne(self, other: "ProCircle", log=False) -> bool:
+        return (
+            Geo.is_nonzero((self.d * other.a - other.d * self.a)**2 + (self.e * other.a - other.e * self.a)**2
+                        + (self.f * other.a - other.f * self.a)**2, log=log)
+        )
 
 @ProLine.intersection.register
 def _(self, other: ProLine):
@@ -287,6 +337,10 @@ def _(L1: ProLine, L2: ProLine, log=False) -> bool:
 @Geo.is_eq.register
 def _(C1: ProCircle, C2: ProCircle, log=False) -> bool:
     return C1.is_eq(C2, log)
+
+@Geo.is_eq.register
+def _(S1: ProSegment, S2: ProSegment, log=False) -> bool:
+    return S1.is_eq(S2, log)
 
 @Geo.distance.register
 def _(P1: ProPoint, P2: ProPoint):
@@ -338,9 +392,15 @@ def _(A: ProPoint, B: ProPoint, C: ProPoint):
 def _(p: ProPoint, l: ProLine, log=False):
     return l.contains(p, log)
 
+@Geo.is_contained.register(ProSegment)
+def _(p: ProPoint, seg: ProSegment, log=False):
+    return seg.contains(p, log)
+
 @Geo.is_contained.register
 def _(p: ProPoint, c: ProCircle, log=False):
     return c.contains(p, log)
+
+
 
 
 @Contained.register
@@ -350,6 +410,15 @@ def _(p: ProPoint, l: ProLine):
 @Contained.register
 def _(p: ProPoint, c: ProCircle):
     return sp.Eq(c.a * (p.x ** 2 + p.y ** 2) + c.d * (p.x * p.z) + c.e * (p.y * p.z) + c.f * (p.z ** 2),0)
+
+@Contained.register
+def _(p: ProPoint, seg: ProSegment):
+    on_line = sp.Eq(seg.a * p.x + seg.b * p.y + seg.c * p.z, 0)
+    u_x = p.x*seg.A.z - seg.A.x*p.z
+    u_y = p.y*seg.A.z - seg.A.y*p.z
+    v_x = p.x*seg.B.z - seg.B.x*p.z
+    v_y = p.y*seg.B.z - seg.B.y*p.z
+    return sp.And(on_line, sp.Le(u_x*v_x + u_y*v_y, 0))
 
 @Eq.register
 def _(A: ProPoint, B: ProPoint):
@@ -373,6 +442,25 @@ def _(a: ProCircle, b:ProCircle):
         sp.Eq(a.f * b.a - b.f * a.a, 0),
     )
 
+@Eq.register
+def _(a: ProSegment, b:ProSegment):
+    A1 = a.A
+    B1 = a.B
+    A2 = b.A
+    B2 = b.B
+    return sp.Or(
+        sp.And(Eq(A1, A2), Eq(B1, B2)),
+        sp.And(Eq(A1, B2), Eq(A2, B1))
+    )
+
+'''
+intersection btw segment & line / seg & seg
+contained for seg & line
+
+
+'''
+
+#
 
 
 

@@ -126,6 +126,30 @@ def is_zero(expr: Expr, conditions, *, trials=10, low=-2.0, high=2.0, log=False)
 
     return True
 
+def is_nonzero(expr: Expr, conditions, *, trials=10, low=-2.0, high=2.0, log=False) -> bool:
+    if not isinstance(expr, Expr) or not expr.free_symbols:
+        return abs(float(expr)) > tol
+    cond_syms = set().union(*(c.free_symbols for c in conditions))
+    base_syms = list(set(expr.free_symbols) | cond_syms)
+    f_mp = lambdify_mpmath(expr, base_syms)
+    eq_br, other_br = split_conditions(conditions)
+    any_branch = False
+    branch_num = 1
+    for eqs, others in zip(eq_br, other_br):
+        for i in range(trials):
+            subs = draw_valid_subs(base_syms, eqs, others, low, high)
+            if subs is None: break
+            any_branch = True
+            val = f_mp(*[subs[s] for s in base_syms])
+            if log:
+                print(f" branch {branch_num}, trial {i+1}, expr ≈ {mp.nstr(val,10)}")
+            if abs(val) < tol: return False
+        branch_num += 1
+
+    if not any_branch:
+        print(f"No valid assignment found for conditions: {eq_br}, {other_br}")
+
+    return True
 
 def is_non_negative(expr: Expr, conditions, *, trials=10, low=-2.0, high=2.0, log=False) -> bool:
     if not isinstance(expr, Expr) or not expr.free_symbols:

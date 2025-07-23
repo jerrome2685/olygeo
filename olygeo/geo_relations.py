@@ -64,3 +64,36 @@ def Concurrent(lines):
     for L in lines:
         exprs.append(Contained(P, L))
     return sp.And(*exprs)
+
+
+def Same_side(P: ProPoint, Q: ProPoint, L: ProLine):
+    valP = L.a*P.x + L.b*P.y + L.c*P.z
+    valQ = L.a*Q.x + L.b*Q.y + L.c*Q.z
+    return Ge(valP*valQ, 0)
+
+
+def Different_side(P: ProPoint, Q: ProPoint, L: ProLine):
+    return sp.Not(Same_side(P, Q, L))
+
+
+def In_circle(P: ProPoint, C: ProCircle):
+    expr = (
+        C.a*(P.x**2 + P.y**2)
+        + C.d*(P.x * P.z)
+        + C.e*(P.y * P.z)
+        + C.f*(P.z**2)
+    )
+    return Le(expr, 0)
+
+
+def Out_circle(P: ProPoint, C: ProCircle):
+    return sp.Not(In_circle(P, C))
+
+
+def Parallel(L1: ProLine, L2: ProLine):
+    return Eq(L1.a*L2.b - L1.b*L2.a, 0)
+
+
+def Perpendicular(L1: ProLine, L2: ProLine):
+    return Eq(L1.a*L2.a + L1.b*L2.b, 0)
+
