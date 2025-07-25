@@ -5,7 +5,7 @@ t0 = time.perf_counter()
 a = ProPoint.unfixed()
 b = ProPoint.unfixed()
 c = ProPoint.unfixed()
-d = a.perpendicular_foot(ProLine.through(b, c))
+d = ProLine.through(b, c).perpendicular_foot(a)
 
 l = ProLine.unfixed()
 
@@ -31,8 +31,8 @@ l2 = w1.radial_axis(w2)
 l3 = ProLine.through(o1, o2)
 
 x = Geo.intersection(l2, l3)
-n_circle.contains(x)
-n_circle.contains(o1)
+print(n_circle.contains(x))
+print(n_circle.contains(o1))
 
 t1 = time.perf_counter()
 

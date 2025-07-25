@@ -12,7 +12,7 @@ print(b.x)
 def not_B(P):
     return Ne((P.x * b.z - b.x * P.z), 0) | Ne((P.y * b.z - b.y * P.z), 0)
 
-p = c.perpendicular_foot(ProLine.through(a, m))
+p = ProLine.through(a, m).perpendicular_foot(c)
 circ = ProCircle.through(a, b, p)
 pts = Geo.intersection(circ, ProLine.through(b, c))
 assert len(pts) == 2

@@ -1,128 +1,49 @@
-from sympy import Symbol
+from sympy import Expr, Integer
 import sympy as sp
 from .geo import Geo, Eq, Ge, Contained
-from .choice import ChoiceList
-from multimethod import multimethod
+from .utils import ChoiceList
+from .container import ProContainer
+from .point import ProPoint
 
 
 
-class ProPoint:
-    _unfixed_counter = 0
 
+class ProLine(ProContainer):
+    a: Expr
+    b: Expr
+    c: Expr
 
-    def __init__(self, x, y, z=1):
-        self.x, self.y, self.z = sp.sympify(x), sp.sympify(y), sp.sympify(z)
-
-
-    def __repr__(self):
-        return f"ProPoint({self.x}:{self.y}:{self.z})"
-
-    def __add__(self, other):
-        return ProPoint(
-            self.x * other.z + other.x * self.z,
-            self.y * other.z + other.y * self.z,
-            self.z * other.z
-        )
-
-    def __sub__(self, other):
-        return ProPoint(
-            self.x * other.z - other.x * self.z,
-            self.y * other.z - other.y * self.z,
-            self.z * other.z
-        )
-
-    def __mul__(self, k):
-        return ProPoint(self.x * k, self.y * k, self.z)
-    __rmul__ = __mul__
-
-    def __truediv__(self, k):
-        return ProPoint(self.x / k, self.y / k, self.z)
-
-
-    def __eq__(self, other):
-        return (
-            self.x == other.x and
-            self.y == other.y and
-            self.z == other.z
-        )
-
-    def __hash__(self):
-        return hash((self.x, self.y, self.z))
-
+    _fields   = ('a', 'b', 'c')
+    _defaults = {'c': Integer(1)}
 
     @classmethod
-    def unfixed(cls):
-        name = f"{cls.__name__}_{cls._unfixed_counter}"
-        cls._unfixed_counter += 1
-        return cls(Symbol(f"{name}_x"), Symbol(f"{name}_y"))
-
-    def parallel_through(self, L: "ProLine"):
-        A, B = L.a, L.b
-        return ProLine(
-            A * self.z,
-            B * self.z,
-            -(A * self.x + B * self.y)
-        )
-
-    def perpendicular_through(self, L: "ProLine"):
-        A, B = L.b, -L.a
-        return ProLine(
-            A * self.z,
-            B * self.z,
-            -(A * self.x + B * self.y)
-        )
-
-    def perpendicular_foot(self, L: "ProLine"):
-        return L.intersection(self.perpendicular_through(L))
-
-    def is_eq(self, other, log=False) -> bool:
-        return Geo.is_zero((self.x * other.z - other.x * self.z)**2 + (self.y * other.z - other.y * self.z)**2, log=log)
-
-    def is_ne(self, other, log=False) -> bool:
-        return Geo.is_nonzero((self.x * other.z - other.x * self.z)**2 +
-                              (self.y * other.z - other.y * self.z)**2, log=log)
-
-
-class ProLine:
-    _unfixed_counter = 0
-
-    def __init__(self, a, b, c=1):
-        self.a, self.b, self.c = sp.sympify(a), sp.sympify(b), sp.sympify(c)
-
-    @classmethod
-    def through(cls, P: ProPoint, Q: ProPoint):
-        a = P.y * Q.z - Q.y * P.z
-        b = Q.x * P.z - P.x * Q.z
-        c = P.x * Q.y - Q.x * P.y
+    def through(cls, p: ProPoint, q: ProPoint):
+        a = p.y * q.z - q.y * p.z
+        b = q.x * p.z - p.x * q.z
+        c = p.x * q.y - q.x * p.y
         return cls(a, b, c)
 
-    @classmethod
-    def unfixed(cls):
-        name = f"{cls.__name__}_{cls._unfixed_counter}"
-        cls._unfixed_counter += 1
-        return cls(Symbol(f"{name}_a"), Symbol(f"{name}_b"))
-
-    def contains(self, P: ProPoint, log=False):
-        expr = self.a*P.x + self.b*P.y + self.c*P.z
+    def contains(self, p: ProPoint, log=False):
+        expr = self.a * p.x + self.b * p.y + self.c * p.z
         return Geo.is_zero(expr, log=log)
 
-    @multimethod
-    def intersection(self, other):
-        raise TypeError(f"Cannot intersect ProLine with {type(other).__name__}")
 
-
-    def __eq__(self, other):
-        return (
-                self.a == other.a and
-                self.b == other.b and
-                self.c == other.c
+    def parallel_through(self, p: ProPoint):
+        return ProLine(
+            self.a * p.z,
+            self.b * p.z,
+            -(self.a * p.x + self.b * p.y)
         )
 
-    def __hash__(self):
-        return hash((self.a, self.b, self.c))
+    def perpendicular_through(self, p: ProPoint):
+        return ProLine(
+            self.b * p.z,
+            -self.a * p.z,
+            -(self.b * p.x - self.a * p.y)
+        )
 
-    def __repr__(self):
-        return f"ProLine({self.a}*x+{self.b}*y+{self.c}*z=0)"
+    def perpendicular_foot(self, p: ProPoint):
+        return self.intersection(self.perpendicular_through(p))
 
     def is_eq(self, other, log=False) -> bool:
         return Geo.is_zero((self.a * other.b - other.a * self.b)**2 + (self.a * other.c - other.a * self.c)**2, log=log)
@@ -132,153 +53,64 @@ class ProLine:
                               (self.a * other.c - other.a * self.c) ** 2, log=log)
 
 
-class ProSegment(ProLine):
-    def __init__(self, A: ProPoint, B: ProPoint):
-        L = ProLine.through(A, B)
-        super().__init__(L.a, L.b, L.c)
-        self.A = A
-        self.B = B
-
-    def contains(self, P: ProPoint, log=False):
-        u_x = P.x * self.A.z - self.A.x * P.z
-        u_y = P.y * self.A.z - self.A.y * P.z
-        v_x = P.x * self.B.z - self.B.x * P.z
-        v_y = P.y * self.B.z - self.B.y * P.z
-        dot_h = u_x * v_x + u_y * v_y
-        return super().contains(P, log=log) and Geo.is_non_negative(-dot_h, log=log)
-
-    def length(self):
-        return Geo.distance(self.A, self.B)
-
-    def __eq__(self, other):
-        return (self.A == other.A and self.B == other.B) or (self.A == other.B and self.B == other.A)
-
-    def __hash__(self):
-        coords = [
-            (self.A.x, self.A.y, self.A.z),
-            (self.B.x, self.B.y, self.B.z),
-        ]
-        coords_sorted = tuple(sorted(coords))
-        return hash(coords_sorted)
-
     def __repr__(self):
-        return f"ProSegment({str(self.A)}, {str(self.B)})"
+        return f"ProLine({self.a}*x + {self.b}*y + {self.c}*z = 0)"
+
+
+
+
+class ProCircle(ProContainer):
+    a: Expr
+    d: Expr
+    e: Expr
+    f: Expr
+    _fields   = ('a', 'd', 'e', 'f')
+    _defaults = {'f': 1}
 
     @classmethod
-    def unfixed(cls):
-        return cls(ProPoint.unfixed(), ProPoint.unfixed())
+    def from_center_point(cls, o: ProPoint, q: ProPoint):
+        ox, oy, oz = o.x, o.y, o.z
+        qx, qy, qz = q.x, q.y, q.z
 
-    def is_eq(self, other, log=False):
-        return ((self.A.is_eq(other.A, log=log) and self.B.is_eq(other.B, log=log)) or
-                (self.A.is_eq(other.B, log=log) and self.B.is_eq(other.A, log=log)))
-
-    def is_ne(self, other, log=False):
-        return ((self.A.is_ne(other.A, log=log) or self.B.is_ne(other.B, log=log)) and
-                (self.A.is_ne(other.B, log=log) or self.B.is_ne(other.A, log=log)))
-
-
-
-class ProCircle:
-    _unfixed_counter = 0
-
-    def __init__(self, a, d, e, f=1):
-        self.a, self.d, self.e, self.f = sp.sympify(a), sp.sympify(d), sp.sympify(e), sp.sympify(f)
-
-    @classmethod
-    def unfixed(cls):
-        name = f"{cls.__name__}_{cls._unfixed_counter}"
-        cls._unfixed_counter += 1
-        return cls(Symbol(f"{name}_a"), Symbol(f"{name}_d"), Symbol(f"{name}_e"))
-
-    @classmethod
-    def through(cls, P: ProPoint, Q: ProPoint, R: ProPoint):
-        M_PQ = (P + Q) / 2
-        M_QR = (Q + R) / 2
-
-        bis_PQ = M_PQ.perpendicular_through(ProLine.through(P, Q))
-        bis_QR = M_QR.perpendicular_through(ProLine.through(Q, R))
-
-        O = bis_PQ.intersection(bis_QR)
-        return cls.from_center_point(O, P)
-
-    @classmethod
-    def from_center_point(cls, O: ProPoint, Q: ProPoint):
-        Ox, Oy, Oz = O.x, O.y, O.z
-        Qx, Qy, Qz = Q.x, Q.y, Q.z
-
-        a = Oz ** 2 * Qz ** 2
-        d = -2 * Ox * Oz * Qz ** 2
-        e = -2 * Oy * Oz * Qz ** 2
-        f = (Ox ** 2 + Oy ** 2) * Qz ** 2 - (Qx * Oz - Ox * Qz) ** 2 - (Qy * Oz - Oy * Qz) ** 2
+        a = oz ** 2 * qz ** 2
+        d = -2 * ox * oz * qz ** 2
+        e = -2 * oy * oz * qz ** 2
+        f = (ox ** 2 + oy ** 2) * qz ** 2 - (qx * oz - ox * qz) ** 2 - (qy * oz - oy * qz) ** 2
         return cls(a, d, e, f)
 
-    def contains(self, P: ProPoint, log=False):
-        expr = (self.a*(P.x**2 + P.y**2)
-                + self.d*(P.x*P.z)
-                + self.e*(P.y*P.z)
-                + self.f*(P.z**2))
-        return Geo.is_zero(expr, log=log)
+    @classmethod
+    def through(cls, p: ProPoint, q: ProPoint, r: ProPoint):
+        m_pq = (p + q) / 2
+        m_qr = (q + r) / 2
 
-    def power(self, P: ProPoint):
-        return self.contains(P)
+        bis_pq = ProLine.through(p, q).perpendicular_through(m_pq)
+        bis_qr = ProLine.through(q, r).perpendicular_through(m_qr)
+        o = bis_pq.intersection(bis_qr)
+        return cls.from_center_point(o, p)
 
-    def radial_axis(self, other):
-        A = self.d*other.a - other.d*self.a
-        B = self.e*other.a - other.e*self.a
-        C = self.f*other.a - other.f*self.a
-        return ProLine(A, B, C)
 
-    @multimethod
-    def intersection(self, other):
-        raise TypeError(f"Cannot intersect ProCircle with {type(other).__name__}")
+    def power(self, p: ProPoint):
+        return (
+                self.a * (p.x ** 2 + p.y ** 2)
+                + self.d * (p.x * p.z)
+                + self.e * (p.y * p.z)
+                + self.f * (p.z ** 2)
+        )
 
-    @intersection.register
-    def _(self, line: ProLine, *, require_real=True):
-        a1, b1, c1 = line.a, line.b, line.c
-        A, d, e, f = self.a, self.d, self.e, self.f
+    def contains(self, p: ProPoint, log=False):
+        return Geo.is_zero(self.power(p), log=log)
 
-        C2 = A * (b1 ** 2 + a1 ** 2)
-        C1 = -2 * A * b1 * c1 + d * a1 * b1 - e * a1 ** 2
-        C0 = A * c1 ** 2 - d * a1 * c1 + f * a1 ** 2
 
-        D = C1 ** 2 - 4 * C2 * C0
-        sD = sp.sqrt(D)
-
-        if require_real:
-            Geo.add_condition(Ge(D, 0))
-
-        u_plus, t_plus = -C1 + sD, 2 * C2
-        u_minus, t_minus = -C1 - sD, 2 * C2
-
-        x_p = b1 * u_plus - c1 * t_plus
-        y_p = -a1 * u_plus
-        z_p = a1 * t_plus
-
-        x_m = b1 * u_minus - c1 * t_minus
-        y_m = -a1 * u_minus
-        z_m = a1 * t_minus
-
-        return ChoiceList([
-            ProPoint(x_p, y_p, z_p),
-            ProPoint(x_m, y_m, z_m),
-        ])
+    def radial_axis(self, other: "ProCircle"):
+        return ProLine(self.d*other.a - other.d*self.a,
+                       self.e*other.a - other.e*self.a, self.f*other.a - other.f*self.a)
 
     def center(self):
         return ProPoint(-self.d, -self.e, 2 * self.a)
 
-    def __eq__(self, other):
-        return (
-            self.a == other.a and
-            self.d == other.d and
-            self.e == other.e and
-            self.f == other.f
-        )
-
-    def __hash__(self):
-        return hash((self.a, self.d, self.e, self.f))
-
     def __repr__(self):
-        return f"ProCircle({self.a}*(x^2+y^2)+{self.d}*x*z+{self.e}*y*z+{self.f}*z^2=0)"
+        return (f"ProCircle({self.a}*(x²+y²) + {self.d}*x*z + "
+                f"{self.e}*y*z + {self.f}*z² = 0)")
 
     def is_eq(self, other: "ProCircle", log=False) -> bool:
         return (
@@ -292,78 +124,85 @@ class ProCircle:
                         + (self.f * other.a - other.f * self.a)**2, log=log)
         )
 
-@ProLine.intersection.register
-def _(self, other: ProLine):
-    x = self.b * other.c - other.b * self.c
-    y = other.a * self.c - self.a * other.c
-    z = self.a * other.b - other.a * self.b
+
+@ProContainer.intersection.register(ProLine, ProLine)
+def _line_line(l1: ProLine, l2: ProLine) -> ProPoint:
+    x = l1.b*l2.c - l2.b*l1.c
+    y = l2.a*l1.c - l1.a*l2.c
+    z = l1.a*l2.b - l2.a*l1.b
     return ProPoint(x, y, z)
 
-@ProLine.intersection.register
-def _(self, other: ProCircle):
-    return other.intersection(self)
+@ProContainer.intersection.register(ProLine, ProCircle)
+def _line_circle(line: ProLine, circle: ProCircle, require_real: bool = True) -> ChoiceList[ProPoint]:
+    a1, b1, c1 = line.a, line.b, line.c
+    a, d, e, f = circle.a, circle.d, circle.e, circle.f
+
+    c2 = a * (b1 ** 2 + a1 ** 2)
+    c11 = -2 * a * b1 * c1 + d * a1 * b1 - e * a1 ** 2
+    c0 = a * c1 ** 2 - d * a1 * c1 + f * a1 ** 2
+
+    de = c11 ** 2 - 4 * c2 * c0
+    s_d = sp.sqrt(de)
+
+    if require_real:
+        Geo.add_condition(Ge(de, 0))
+
+    u_plus, t_plus = -c11 + s_d, 2 * c2
+    u_minus, t_minus = -c11 - s_d, 2 * c2
+
+    x_p = b1 * u_plus - c1 * t_plus
+    y_p = -a1 * u_plus
+    z_p = a1 * t_plus
+
+    x_m = b1 * u_minus - c1 * t_minus
+    y_m = -a1 * u_minus
+    z_m = a1 * t_minus
+
+    return ChoiceList([
+        ProPoint(x_p, y_p, z_p),
+        ProPoint(x_m, y_m, z_m),
+    ])
+
+@ProContainer.intersection.register(ProCircle, ProLine)
+def _(circle: ProCircle, line: ProLine, require_real: bool = True) -> ChoiceList[ProPoint]:
+    return _line_circle(line, circle, require_real=require_real)
+
+@ProContainer.intersection.register(ProCircle, ProCircle)
+def _circle_circle(c1: ProCircle, c2: ProCircle, require_real: bool = False) -> ChoiceList[ProPoint]:
+    return _line_circle(c1.radial_axis(c2), c2, require_real=require_real)
 
 
-@ProCircle.intersection.register
-def _(self: ProCircle, other: ProCircle):
-    rad = self.radial_axis(other)
-    pts = self.intersection(rad)
-    return pts
-
-@Geo.intersection.register
-def _(L1: ProLine, L2: ProLine):
-    return L1.intersection(L2)
-
-@Geo.intersection.register
-def _(C: ProCircle, L: ProLine):
-    return C.intersection(L)
-
-@Geo.intersection.register
-def _(L: ProLine, C: ProCircle):
-    return C.intersection(L)
-
-@Geo.intersection.register
-def _(C1: ProCircle, C2: ProCircle):
-    return C1.intersection(C2)
 
 @Geo.is_eq.register
-def _(A: ProPoint, B: ProPoint, log=False) -> bool:
-    return A.is_eq(B, log)
+def _(c1: ProContainer, c2: ProContainer, log=False) -> bool:
+    return c1.is_eq(c2, log)
 
-@Geo.is_eq.register
-def _(L1: ProLine, L2: ProLine, log=False) -> bool:
-    return L1.is_eq(L2, log)
-
-@Geo.is_eq.register
-def _(C1: ProCircle, C2: ProCircle, log=False) -> bool:
-    return C1.is_eq(C2, log)
-
-@Geo.is_eq.register
-def _(S1: ProSegment, S2: ProSegment, log=False) -> bool:
-    return S1.is_eq(S2, log)
+@Geo.is_ne.register
+def _(c1: ProContainer, c2: ProContainer, log=False) -> bool:
+    return c1.is_ne(c2, log)
 
 @Geo.distance.register
-def _(P1: ProPoint, P2: ProPoint):
-    if Geo.is_zero(P1.z) or Geo.is_zero(P2.z):
+def _(p1: ProPoint, p2: ProPoint):
+    if Geo.is_zero(p1.z) or Geo.is_zero(p2.z):
         return sp.oo
-    dx = P1.x*P2.z - P2.x*P1.z
-    dy = P1.y*P2.z - P2.y*P1.z
-    denom = P1.z * P2.z
+    dx = p1.x * p2.z - p2.x * p1.z
+    dy = p1.y * p2.z - p2.y * p1.z
+    denom = p1.z * p2.z
     return sp.sqrt((dx/denom)**2 + (dy/denom)**2)
 
 @Geo.distance.register
-def _(P: ProPoint, L: ProLine):
-    if Geo.is_zero(P.z):
-        return 0 if L.contains(P) else sp.oo
-    if Geo.is_zero(L.a) and Geo.is_zero(L.b):
+def _(p: ProPoint, l: ProLine):
+    if Geo.is_zero(p.z):
+        return 0 if l.contains(p) else sp.oo
+    if Geo.is_zero(l.a) and Geo.is_zero(l.b):
         return sp.oo
-    num = abs(L.a*P.x + L.b*P.y + L.c*P.z)
-    den = sp.sqrt(L.a**2 + L.b**2)*abs(P.z)
+    num = abs(l.a * p.x + l.b * p.y + l.c * p.z)
+    den = sp.sqrt(l.a ** 2 + l.b ** 2) * abs(p.z)
     return num/den
 
 @Geo.distance.register
-def _(L: ProLine, P: ProPoint):
-    return Geo.distance(P, L)
+def _(l: ProLine, p: ProPoint):
+    return Geo.distance(p, l)
 
 @Geo.angle.register
 def _(l1: ProLine, l2: ProLine, _unused=None):
@@ -378,28 +217,15 @@ def _(l1: ProLine, l2: ProLine, _unused=None):
 
 
 @Geo.angle.register
-def _(A: ProPoint, B: ProPoint, C: ProPoint):
-    if A.is_eq(B) or B.is_eq(C):
+def _(a: ProPoint, b: ProPoint, c: ProPoint):
+    if a.is_eq(b) or b.is_eq(c):
         return sp.sympify(0)
-    v1 = sp.Matrix([A.x * B.z - B.x * A.z, A.y * B.z - B.y * A.z])
-    v2 = sp.Matrix([C.x * B.z - B.x * C.z, C.y * B.z - B.y * C.z])
+    v1 = sp.Matrix([a.x * b.z - b.x * a.z, a.y * b.z - b.y * a.z])
+    v2 = sp.Matrix([c.x * b.z - b.x * c.z, c.y * b.z - b.y * c.z])
     dot = v1.dot(v2)
     n1 = sp.sqrt(v1.dot(v1))
     n2 = sp.sqrt(v2.dot(v2))
     return sp.acos(dot / (n1 * n2))
-
-@Geo.is_contained.register
-def _(p: ProPoint, l: ProLine, log=False):
-    return l.contains(p, log)
-
-@Geo.is_contained.register(ProSegment)
-def _(p: ProPoint, seg: ProSegment, log=False):
-    return seg.contains(p, log)
-
-@Geo.is_contained.register
-def _(p: ProPoint, c: ProCircle, log=False):
-    return c.contains(p, log)
-
 
 
 
@@ -411,21 +237,16 @@ def _(p: ProPoint, l: ProLine):
 def _(p: ProPoint, c: ProCircle):
     return sp.Eq(c.a * (p.x ** 2 + p.y ** 2) + c.d * (p.x * p.z) + c.e * (p.y * p.z) + c.f * (p.z ** 2),0)
 
-@Contained.register
-def _(p: ProPoint, seg: ProSegment):
-    on_line = sp.Eq(seg.a * p.x + seg.b * p.y + seg.c * p.z, 0)
-    u_x = p.x*seg.A.z - seg.A.x*p.z
-    u_y = p.y*seg.A.z - seg.A.y*p.z
-    v_x = p.x*seg.B.z - seg.B.x*p.z
-    v_y = p.y*seg.B.z - seg.B.y*p.z
-    return sp.And(on_line, sp.Le(u_x*v_x + u_y*v_y, 0))
+# @Contained.register
+# def _(p: ProPoint, seg: ProSegment):
+#     on_line = sp.Eq(seg.a * p.x + seg.b * p.y + seg.c * p.z, 0)
+#     u_x = p.x*seg.A.z - seg.A.x*p.z
+#     u_y = p.y*seg.A.z - seg.A.y*p.z
+#     v_x = p.x*seg.B.z - seg.B.x*p.z
+#     v_y = p.y*seg.B.z - seg.B.y*p.z
+#     return sp.And(on_line, sp.Le(u_x*v_x + u_y*v_y, 0))
 
-@Eq.register
-def _(A: ProPoint, B: ProPoint):
-    return sp.And(
-        sp.Eq(A.x * B.z - B.x * A.z, 0),
-        sp.Eq(A.y * B.z - B.y * A.z, 0),
-    )
+
 
 @Eq.register
 def _(a: ProLine, b:ProLine):
@@ -442,16 +263,16 @@ def _(a: ProCircle, b:ProCircle):
         sp.Eq(a.f * b.a - b.f * a.a, 0),
     )
 
-@Eq.register
-def _(a: ProSegment, b:ProSegment):
-    A1 = a.A
-    B1 = a.B
-    A2 = b.A
-    B2 = b.B
-    return sp.Or(
-        sp.And(Eq(A1, A2), Eq(B1, B2)),
-        sp.And(Eq(A1, B2), Eq(A2, B1))
-    )
+# @Eq.register
+# def _(a: ProSegment, b:ProSegment):
+#     A1 = a.A
+#     B1 = a.B
+#     A2 = b.A
+#     B2 = b.B
+#     return sp.Or(
+#         sp.And(Eq(A1, A2), Eq(B1, B2)),
+#         sp.And(Eq(A1, B2), Eq(A2, B1))
+#     )
 
 '''
 intersection btw segment & line / seg & seg

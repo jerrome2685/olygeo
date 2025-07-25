@@ -63,15 +63,13 @@ class Geo:
         return r <= 2
 
     @staticmethod
-    @multimethod
     def is_contained(a, b, log=False):
-        raise TypeError(f"Cannot interpret {type(a)} contained to {type(b)}")
+        return b.contains(a, log=log)
 
 
     @staticmethod
-    @multimethod
     def intersection(a, b):
-        raise TypeError(f"Don't know how to intersect {type(a)} & {type(b)}")
+        return a.intersection(b)
 
     @staticmethod
     @multimethod
@@ -91,6 +89,7 @@ class Geo:
 
 
     @staticmethod
+    @multimethod
     def is_ne(a, b, log=False) -> bool:
         return Geo.is_nonzero(a - b, log=log)
 

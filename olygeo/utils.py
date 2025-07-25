@@ -26,3 +26,5 @@ class ChoiceList(list):
             pw_args[name] = Piecewise(*clauses, evaluate=False)
 
         return cls(**pw_args)
+
+
