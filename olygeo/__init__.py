@@ -1,4 +1,4 @@
-__version__ = "0.1.2"
+__version__ = "0.2.0"
 
 from .geo import Geo, Eq, Ne, Lt, Le, Gt, Ge, Contained
 from .point import ProPoint
