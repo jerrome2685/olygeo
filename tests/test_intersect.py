@@ -11,7 +11,7 @@ def test_symbolic_choose_not_A():
     assert len(pts) == 2
 
     def not_A(P):
-        return sp.Or(Ne(P.x*A.z - A.x*P.z, 0), Ne(P.y*A.z - A.y*P.z, 0))
+        return sp.Or(Relation.ne(P.x*A.z - A.x*P.z, 0), Relation.ne(P.y*A.z - A.y*P.z, 0))
 
     Q = pts.choose(not_A)
     assert Geo.is_ne(A, Q)

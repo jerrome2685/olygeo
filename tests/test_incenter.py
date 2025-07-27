@@ -1,4 +1,3 @@
-import pytest
 from olygeo import *
 
 def test_triangle_incenter():

@@ -8,5 +8,5 @@ tri = ProTriangle(A, B, C)
 I = tri.incenter()
 
 print(I)
-print(Eq(A, D))
-print(Eq(A, B))
+print(Relation.eq(A, D))
+print(Relation.eq(A, B))

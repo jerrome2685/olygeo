@@ -41,3 +41,38 @@
 #
 #     def is_ne(self, other, log=False):
 #         return not self.is_eq(other, log=log)
+
+
+
+
+# @Contained.register
+# def _(p: ProPoint, seg: ProSegment):
+#     on_line = sp.Eq(seg.a * p.x + seg.b * p.y + seg.c * p.z, 0)
+#     u_x = p.x*seg.A.z - seg.A.x*p.z
+#     u_y = p.y*seg.A.z - seg.A.y*p.z
+#     v_x = p.x*seg.B.z - seg.B.x*p.z
+#     v_y = p.y*seg.B.z - seg.B.y*p.z
+#     return sp.And(on_line, sp.Le(u_x*v_x + u_y*v_y, 0))
+
+
+
+
+# @Eq.register
+# def _(a: ProSegment, b:ProSegment):
+#     A1 = a.A
+#     B1 = a.B
+#     A2 = b.A
+#     B2 = b.B
+#     return sp.Or(
+#         sp.And(Eq(A1, A2), Eq(B1, B2)),
+#         sp.And(Eq(A1, B2), Eq(A2, B1))
+#     )
+
+# '''
+# intersection btw segment & line / seg & seg
+# contained for seg & line
+#
+#
+# '''
+
+#

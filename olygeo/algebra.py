@@ -3,7 +3,7 @@ import sympy as sp
 import mpmath as mp
 from sympy.core.expr import Expr
 from sympy import Matrix
-from sympy.logic.boolalg import to_dnf, And, BooleanFunction, BooleanAtom
+from sympy.logic.boolalg import to_dnf, And, Boolean, BooleanFunction, BooleanAtom
 from sympy.core.relational import Equality, Relational
 from functools import lru_cache
 from typing import Union
@@ -84,7 +84,7 @@ def draw_valid_subs(base_syms, eqs, others,
             solve_vars = random.sample(all_eq_syms, len(funcs_syms))
             def sys_func(*vals):
                 a = subs.copy()
-                for v,val in zip(solve_vars, vals): a[v] = val
+                for v, u in zip(solve_vars, vals): a[v] = u
                 return [eq_funcs[i](*[a[s] for s in all_eq_syms]) for i in range(len(funcs_syms))]
             guesses = [subs[v] for v in solve_vars]
             try: mp.findroot(sys_func, guesses, tol=1e-6, maxsteps=5)
@@ -201,7 +201,7 @@ def is_positive(expr: Expr, conditions, *, trials=10, low=-2.0, high=2.0, log=Fa
 
     return True
 
-def is_true(rel: Union[bool, BooleanAtom, Relational, BooleanFunction],
+def is_true(rel: Union[bool, Boolean, Relational],
             conditions, *, trials=10, low=-2.0, high=2.0, log=False) -> bool:
     if isinstance(rel, (bool, BooleanAtom)):
         return bool(rel)
@@ -226,10 +226,10 @@ def is_true(rel: Union[bool, BooleanAtom, Relational, BooleanFunction],
 
     return True
 
-def probabilistic_rank(M: Matrix, conditions, *, trials=10, low=-2.0, high=2.0) -> int:
+def probabilistic_rank(m: Matrix, conditions, *, trials=10, low=-2.0, high=2.0) -> int:
     cond_syms = set().union(*(c.free_symbols for c in conditions))
-    base_syms = list(set(M.free_symbols) | cond_syms)
-    entry_funcs = [lambdify_mpmath(M[i,j], base_syms) for i in range(M.rows) for j in range(M.cols)]
+    base_syms = list(set(m.free_symbols) | cond_syms)
+    entry_funcs = [lambdify_mpmath(m[i,j], base_syms) for i in range(m.rows) for j in range(m.cols)]
     eq_br, other_br = split_conditions(conditions)
     max_rank = 0
     any_branch = False
@@ -238,10 +238,10 @@ def probabilistic_rank(M: Matrix, conditions, *, trials=10, low=-2.0, high=2.0) 
             subs = draw_valid_subs(base_syms, eqs, others, low, high)
             if subs is None: break
             any_branch = True
-            A_mp = sp.Matrix([[entry_funcs[i * M.cols + j](*[subs[s] for s in base_syms])
-                               for j in range(M.cols)]
-                              for i in range(M.rows)])
-            r = sum(1 for v in mp.svd_r(A_mp, compute_uv=False) if not abs(v) <= tol)
+            a_mp = sp.Matrix([[entry_funcs[i * m.cols + j](*[subs[s] for s in base_syms])
+                               for j in range(m.cols)]
+                              for i in range(m.rows)])
+            r = sum(1 for v in mp.svd_r(a_mp, compute_uv=False) if not abs(v) <= tol)
             max_rank = max(max_rank, r)
 
     if not any_branch:

@@ -2,12 +2,12 @@
 import time
 import sympy as sp
 from olygeo.algebra import is_zero
-from olygeo.geo import Eq
+from olygeo.relation import Relation
 
 def test_is_zero():
     # Prepare
     x, y = sp.symbols('x y')
-    conds = [Eq(x**2 - y**3, 2)]           # no extra conditions
+    conds = [Relation.eq(x**2 - y**3, 2)]           # no extra conditions
     trials = 100
 
     # Warm‑up

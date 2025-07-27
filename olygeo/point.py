@@ -1,12 +1,14 @@
-from sympy import Symbol, Expr, Integer
+from sympy import Symbol, Expr
 import sympy as sp
-from .geo import Geo, Eq
+from .geo import Geo
+from .relation import Relation
+from typing import Union
 
 
 class ProPoint:
     _unfixed_counter = 0
 
-    def __init__(self, x: Expr, y: Expr, z: Expr = Integer(1)):
+    def __init__(self, x: Union[Expr, int], y: Union[Expr, int], z: Union[Expr, int] = 1):
         self.x, self.y, self.z = sp.sympify(x), sp.sympify(y), sp.sympify(z)
 
     def __repr__(self):
@@ -67,7 +69,7 @@ def _(a: ProPoint, b: ProPoint, log=False) -> bool:
 def _(a: ProPoint, b: ProPoint, log=False) -> bool:
     return a.is_ne(b, log)
 
-@Eq.register
+@Relation.eq.register
 def _(a: ProPoint, b: ProPoint):
     return sp.And(
         sp.Eq(a.x * b.z - b.x * a.z, 0),

@@ -6,34 +6,34 @@ def test_collinear_numeric_true():
     A = ProPoint(0, 0)
     B = ProPoint(1, 1)
     C = ProPoint(2, 2)
-    assert Collinear([A, B, C])
+    assert GeoRelation.collinear([A, B, C])
 
 
 def test_collinear_numeric_false():
     A = ProPoint(0, 0)
     B = ProPoint(1, 2)
     C = ProPoint(2, 1)
-    assert not Collinear([A, B, C])
+    assert not GeoRelation.collinear([A, B, C])
 
 
 def test_collinear_symbolic():
     A = ProPoint.unfixed()
     B = ProPoint.unfixed()
     C = ProPoint.unfixed()
-    expr = Collinear([A, B, C])
+    expr = GeoRelation.collinear([A, B, C])
     assert isinstance(expr, Relational)
     assert expr != sp.true
 
 
 def test_concyclic_numeric_true():
     pts = [ProPoint(0, 0), ProPoint(1, 0), ProPoint(1, 1), ProPoint(0, 1)]
-    assert Concyclic(pts)
+    assert GeoRelation.concyclic(pts)
 
 
 def test_concyclic_numeric_false():
     # three on unit circle, one off
     pts = [ProPoint(1, 0), ProPoint(0, 1), ProPoint(-1, 0), ProPoint(2, 0)]
-    assert not Concyclic(pts)
+    assert not GeoRelation.concyclic(pts)
 
 
 def test_concyclic_symbolic():
@@ -41,7 +41,7 @@ def test_concyclic_symbolic():
     B = ProPoint.unfixed()
     C = ProPoint.unfixed()
     D = ProPoint.unfixed()
-    assert Concyclic([A, B, C, D]) != sp.true
+    assert GeoRelation.concyclic([A, B, C, D]) != sp.true
 
 
 def test_concurrent_numeric_true():
@@ -49,14 +49,14 @@ def test_concurrent_numeric_true():
     L1 = ProLine.through(ProPoint(0, 0), ProPoint(1, 1))
     L2 = ProLine.through(ProPoint(0, 0), ProPoint(1, 2))
     L3 = ProLine.through(ProPoint(0, 0), ProPoint(2, 1))
-    assert Concurrent([L1, L2, L3])
+    assert GeoRelation.concurrent([L1, L2, L3])
 
 
 def test_concurrent_numeric_false():
     L1 = ProLine.through(ProPoint(0, 0), ProPoint(1, 0))
     L2 = ProLine.through(ProPoint(0, 1), ProPoint(1, 1))
     L3 = ProLine.through(ProPoint(0, 2), ProPoint(1, 2))
-    assert Concurrent([L1, L2, L3])
+    assert GeoRelation.concurrent([L1, L2, L3])
 
 
 def test_concurrent_symbolic():
@@ -67,4 +67,4 @@ def test_concurrent_symbolic():
     L1 = ProLine.through(A, B)
     L2 = ProLine.through(A, C)
     L3 = ProLine.through(A, ProPoint.unfixed())
-    assert Concurrent([L1, L2, L3])
+    assert GeoRelation.concurrent([L1, L2, L3])

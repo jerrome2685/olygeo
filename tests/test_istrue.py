@@ -1,4 +1,5 @@
 from sympy import Eq, symbols, Or, And
+
 from olygeo.algebra import is_true
 
 

@@ -1,20 +1,21 @@
-from sympy import Expr, Integer
+from sympy import Expr
 import sympy as sp
-from .geo import Geo, Eq, Ge, Contained
+from .geo import Geo
 from .utils import ChoiceList
 from .container import ProContainer
 from .point import ProPoint
-
+from .relation import Relation
+from typing import Union
 
 
 
 class ProLine(ProContainer):
-    a: Expr
-    b: Expr
-    c: Expr
+    a: Union[Expr, int]
+    b: Union[Expr, int]
+    c: Union[Expr, int]
 
     _fields   = ('a', 'b', 'c')
-    _defaults = {'c': Integer(1)}
+    _defaults = {'c': 1}
 
     @classmethod
     def through(cls, p: ProPoint, q: ProPoint):
@@ -60,10 +61,10 @@ class ProLine(ProContainer):
 
 
 class ProCircle(ProContainer):
-    a: Expr
-    d: Expr
-    e: Expr
-    f: Expr
+    a: Union[Expr, int]
+    d: Union[Expr, int]
+    e: Union[Expr, int]
+    f: Union[Expr, int]
     _fields   = ('a', 'd', 'e', 'f')
     _defaults = {'f': 1}
 
@@ -145,7 +146,7 @@ def _line_circle(line: ProLine, circle: ProCircle, require_real: bool = True) ->
     s_d = sp.sqrt(de)
 
     if require_real:
-        Geo.add_condition(Ge(de, 0))
+        Geo.add_condition(sp.Ge(de, 0))
 
     u_plus, t_plus = -c11 + s_d, 2 * c2
     u_minus, t_minus = -c11 - s_d, 2 * c2
@@ -187,8 +188,8 @@ def _(p1: ProPoint, p2: ProPoint):
         return sp.oo
     dx = p1.x * p2.z - p2.x * p1.z
     dy = p1.y * p2.z - p2.y * p1.z
-    denom = p1.z * p2.z
-    return sp.sqrt((dx/denom)**2 + (dy/denom)**2)
+    den = p1.z * p2.z
+    return sp.sqrt((dx/den)**2 + (dy/den)**2)
 
 @Geo.distance.register
 def _(p: ProPoint, l: ProLine):
@@ -229,33 +230,24 @@ def _(a: ProPoint, b: ProPoint, c: ProPoint):
 
 
 
-@Contained.register
+@Relation.contained.register
 def _(p: ProPoint, l: ProLine):
     return sp.Eq(l.a * p.x + l.b * p.y + l.c * p.z, 0)
 
-@Contained.register
+@Relation.contained.register
 def _(p: ProPoint, c: ProCircle):
     return sp.Eq(c.a * (p.x ** 2 + p.y ** 2) + c.d * (p.x * p.z) + c.e * (p.y * p.z) + c.f * (p.z ** 2),0)
 
-# @Contained.register
-# def _(p: ProPoint, seg: ProSegment):
-#     on_line = sp.Eq(seg.a * p.x + seg.b * p.y + seg.c * p.z, 0)
-#     u_x = p.x*seg.A.z - seg.A.x*p.z
-#     u_y = p.y*seg.A.z - seg.A.y*p.z
-#     v_x = p.x*seg.B.z - seg.B.x*p.z
-#     v_y = p.y*seg.B.z - seg.B.y*p.z
-#     return sp.And(on_line, sp.Le(u_x*v_x + u_y*v_y, 0))
 
 
-
-@Eq.register
+@Relation.eq.register
 def _(a: ProLine, b:ProLine):
     return sp.And(
         sp.Eq(a.a * b.c - b.a * a.c, 0),
         sp.Eq(a.b * b.c - b.b * a.c, 0),
     )
 
-@Eq.register
+@Relation.eq.register
 def _(a: ProCircle, b:ProCircle):
     return sp.And(
         sp.Eq(a.d * b.a - b.d * a.a, 0),
@@ -263,25 +255,6 @@ def _(a: ProCircle, b:ProCircle):
         sp.Eq(a.f * b.a - b.f * a.a, 0),
     )
 
-# @Eq.register
-# def _(a: ProSegment, b:ProSegment):
-#     A1 = a.A
-#     B1 = a.B
-#     A2 = b.A
-#     B2 = b.B
-#     return sp.Or(
-#         sp.And(Eq(A1, A2), Eq(B1, B2)),
-#         sp.And(Eq(A1, B2), Eq(A2, B1))
-#     )
-
-'''
-intersection btw segment & line / seg & seg
-contained for seg & line
-
-
-'''
-
-#
 
 
 

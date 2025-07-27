@@ -10,7 +10,7 @@ def test_midpoint():
     M = ProPoint(B.x + t * (C.x - B.x), B.y + t * (C.y - B.y))
 
 
-    Geo.add_condition( Eq(Geo.distance(B, M), Geo.distance(M, C)) )
+    Geo.add_condition( Relation.eq(Geo.distance(B, M), Geo.distance(M, C)) )
 
     M2 = (B + C) / 2
 

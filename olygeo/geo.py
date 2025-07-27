@@ -1,8 +1,6 @@
-from .algebra import is_zero, probabilistic_rank, is_non_negative, is_positive, is_nonzero
+from .algebra import is_zero, probabilistic_rank, is_non_negative, is_positive, is_nonzero, is_true
 from sympy.core.relational import Relational
 from sympy import Matrix
-import sympy as sp
-from functools import singledispatch
 from multimethod import multimethod
 
 
@@ -35,31 +33,35 @@ class Geo:
         return is_positive(expr, Geo.conditions, **kwargs)
 
     @staticmethod
-    def probabilistic_rank(M, **kwargs):
-        return probabilistic_rank(M, Geo.conditions, **kwargs)
+    def is_true(expr, **kwargs):
+        return is_true(expr, Geo.conditions, **kwargs)
+
+    @staticmethod
+    def probabilistic_rank(m, **kwargs):
+        return probabilistic_rank(m, Geo.conditions, **kwargs)
 
     @staticmethod
     def is_collinear(pts: list) -> bool:
         if len(pts) < 3:
             return True
-        M = Matrix([[p.x, p.y, p.z] for p in pts])
-        r = Geo.probabilistic_rank(M)
+        m = Matrix([[p.x, p.y, p.z] for p in pts])
+        r = Geo.probabilistic_rank(m)
         return r <= 2
 
     @staticmethod
     def is_concyclic(pts: list) -> bool:
         if len(pts) < 4:
             return True
-        M = Matrix([[p.x**2 + p.y**2, p.x*p.z, p.y*p.z, p.z**2] for p in pts])
-        r = Geo.probabilistic_rank(M)
+        m = Matrix([[p.x**2 + p.y**2, p.x*p.z, p.y*p.z, p.z**2] for p in pts])
+        r = Geo.probabilistic_rank(m)
         return r <= 3
 
     @staticmethod
     def is_concurrent(lines: list) -> bool:
         if len(lines) < 3:
             return True
-        M = Matrix([[l.a, l.b, l.c] for l in lines])
-        r = Geo.probabilistic_rank(M)
+        m = Matrix([[l.a, l.b, l.c] for l in lines])
+        r = Geo.probabilistic_rank(m)
         return r <= 2
 
     @staticmethod
@@ -110,29 +112,4 @@ class Geo:
         return Geo.is_positive(expr1 - expr2, log=log)
 
 
-@singledispatch
-def Eq(a, b):
-    return sp.Eq(a, b)
 
-def Ne(a, b):
-    return sp.Not(Eq(a, b))
-
-
-def Lt(a, b):
-    return sp.Lt(a, b)
-
-
-def Le(a, b):
-    return sp.Le(a, b)
-
-
-def Gt(a, b):
-    return sp.Gt(a, b)
-
-
-def Ge(a, b):
-    return sp.Ge(a, b)
-
-@multimethod
-def Contained(a, b):
-    return Eq(a, b)

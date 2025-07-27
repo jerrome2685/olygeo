@@ -8,11 +8,10 @@ B = ProPoint.unfixed()
 C = ProPoint.unfixed()
 t = sp.symbols('t', real=True)
 
-M = ProPoint((A.x + B.x)/2, (A.y + B.y)/2, 1)
+M = ProPoint((A.x + B.x)/2, (A.y + B.y)/2)
 
 D = ProPoint(M.x + t*(B.x - M.x),
-             M.y + t*(B.y - M.y),
-             1)
+             M.y + t*(B.y - M.y))
 
 I1 = ProTriangle(A, D, C).incenter()
 I2 = ProTriangle(B, D, C).incenter()
