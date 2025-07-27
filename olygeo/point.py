@@ -8,7 +8,7 @@ from typing import Union
 class ProPoint:
     _unfixed_counter = 0
 
-    def __init__(self, x: Union[Expr, int], y: Union[Expr, int], z: Union[Expr, int] = 1):
+    def __init__(self, x: Union[Expr, int, float], y: Union[Expr, int, float], z: Union[Expr, int, float] = 1):
         self.x, self.y, self.z = sp.sympify(x), sp.sympify(y), sp.sympify(z)
 
     def __repr__(self):

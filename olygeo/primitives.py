@@ -10,9 +10,9 @@ from typing import Union
 
 
 class ProLine(ProContainer):
-    a: Union[Expr, int]
-    b: Union[Expr, int]
-    c: Union[Expr, int]
+    a: Union[Expr, int, float]
+    b: Union[Expr, int, float]
+    c: Union[Expr, int, float]
 
     _fields   = ('a', 'b', 'c')
     _defaults = {'c': 1}
@@ -61,10 +61,10 @@ class ProLine(ProContainer):
 
 
 class ProCircle(ProContainer):
-    a: Union[Expr, int]
-    d: Union[Expr, int]
-    e: Union[Expr, int]
-    f: Union[Expr, int]
+    a: Union[Expr, int, float]
+    d: Union[Expr, int, float]
+    e: Union[Expr, int, float]
+    f: Union[Expr, int, float]
     _fields   = ('a', 'd', 'e', 'f')
     _defaults = {'f': 1}
 
